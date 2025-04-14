@@ -42,12 +42,24 @@ export async function fetchWithTimeout(url: string, options: RequestInit = {}, t
       result.cacheHit = cfCache === "HIT"
       result.cacheProvider = "Cloudflare"
     }
+
+    // Check for AWS Cache
+    const awsCache = headers.get('x-cache');
+    if(awsCache && awsCache.includes('cloudfront')) {
+        result.cacheHit = awsCache.includes('HIT');
+        result.cacheProvider = 'Cloudfront';
+    }
   
     // Check for Fastly cache header
     const fastlyCache = headers.get("x-cache")
-    if (fastlyCache) {
-      result.cacheHit = fastlyCache.includes("HIT")
-      result.cacheProvider = "Fastly"
+    const fastlyXServedBy = headers.get('x-served-by');
+    // checking structure of fastly x-served-by header to match docs: https://www.fastly.com/documentation/reference/http/http-headers/X-Served-By/
+    if (fastlyCache && (fastlyXServedBy && !result.cacheProvider)) {
+        const fastlyPattern = /cache-[a-z]{3}-[a-z]+\d+-[a-z]{3}/i;
+        if(fastlyPattern.test(fastlyXServedBy.split(',')[0].trim())){
+            result.cacheHit = fastlyCache.includes("HIT")
+            result.cacheProvider = "Fastly"
+        }
     }
   
     // Check for Akamai cache header
