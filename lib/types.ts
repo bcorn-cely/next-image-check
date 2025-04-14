@@ -3,6 +3,21 @@ export interface ImageDimensions {
   height: number
 }
 
+export interface SrcSetAnalysis {
+  transformationCount: number
+  hasAppropriateRange: boolean
+  hasMobileSize: boolean
+  hasDesktopSize: boolean
+  sizeRange: { min: number; max: number } | null
+}
+
+export interface CacheInfo {
+  cacheHit: boolean
+  cacheProvider?: string
+  ttl?: number
+  cacheControl?: string
+}
+
 export interface ImageInfo {
   src: string
   size: number
@@ -14,6 +29,10 @@ export interface ImageInfo {
   isInViewport?: boolean
   isVisible?: boolean
   recommendations: string[]
+  srcset?: string
+  srcsetAnalysis?: SrcSetAnalysis
+  cacheInfo?: CacheInfo
+  responseTime?: number
 }
 
 export interface ImageAnalysis {
@@ -24,4 +43,6 @@ export interface ImageAnalysis {
   potentialSavingsPercentage: number
   isLikelyNextJsSite?: boolean
   renderedWithPuppeteer?: boolean
+  totalTransformations?: number
+  cachedImagesPercentage?: number
 }
