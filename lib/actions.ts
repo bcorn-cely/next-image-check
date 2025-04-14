@@ -23,6 +23,20 @@ import {
 // Import puppeteer and chromium dynamically to avoid issues with SSR
 import puppeteer from "puppeteer-core"
 import chromium from "@sparticuz/chromium-min"
+import sharp from 'sharp';
+
+type ImageData = {
+  src: string;
+  width: number;
+  height: number;
+  alt: string;
+  loading: string;
+  isVisible: boolean;
+  isInViewport: boolean;
+  attributes: { [key: string]: string };
+  isNextImage: boolean;
+  srcset: string;
+}
 
 export async function analyzeUrl(url: string): Promise<ImageAnalysis> {
   // Check if puppeteer and chromium are available
@@ -116,7 +130,7 @@ export async function analyzeUrl(url: string): Promise<ImageAnalysis> {
         html = await page.content()
 
         // Create a simple structure similar to node-html-parser for compatibility
-        imgElements = imageData.map((imgData) => ({
+        imgElements = imageData.map((imgData: ImageData) => ({
           getAttribute: (name: string) => imgData.attributes[name] || null,
           hasAttribute: (name: string) => imgData.attributes.hasOwnProperty(name),
           parentNode: null, // We already checked for Next.js image in the browser

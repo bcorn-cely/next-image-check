@@ -26,7 +26,7 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Button } from "@/components/ui/button"
 import type { ImageAnalysis, ImageInfo } from "@/lib/types"
-import { formatBytes, truncateUrl } from "@/lib/utils"
+import { formatBytes, truncateUrl } from "@/lib/utils/format"
 import { useState, useMemo } from "react"
 import { Input } from "@/components/ui/input"
 import {
@@ -691,8 +691,8 @@ function CompactImageCard({
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-7 px-2 text-xs mt-2"
-                          onClick={() => copyToClipboard(image.srcset, "srcset copied to clipboard!")}
+                          className="h-7 px-2 text-xs mt-2" 
+                          onClick={() => image.srcset && copyToClipboard(image.srcset, "srcset copied to clipboard!")}
                         >
                           <Copy className="h-3.5 w-3.5 mr-1" /> Copy
                         </Button>
@@ -744,12 +744,12 @@ function CompactImageCard({
                 <AccordionContent>
                   <div className="bg-muted p-3 rounded-md text-sm overflow-x-auto">
                     <pre>{`<Image
-  src="${image.src}"
-  alt="Description"
-  width={${image.dimensions?.width || "width"}}
-  height={${image.dimensions?.height || "height"}}
-  ${image.isLCP ? "priority" : ""}
-/>`}</pre>
+                    src="${image.src}"
+                    alt="Description"
+                    width={${image.dimensions?.width || "width"}}
+                    height={${image.dimensions?.height || "height"}}
+                    ${image.isLCP ? "priority" : ""}
+                  />`}</pre>
                   </div>
                 </AccordionContent>
               </AccordionItem>
