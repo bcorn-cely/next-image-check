@@ -24,6 +24,7 @@ import {
 import puppeteer from "puppeteer-core"
 import chromium from "@sparticuz/chromium-min"
 import sharp from 'sharp';
+import { clear } from "console"
 
 type ImageData = {
   src: string;
@@ -69,7 +70,7 @@ export async function analyzeUrl(url: string): Promise<ImageAnalysis> {
         const startTime = Date.now()
         await page.goto(url, {
           waitUntil: "networkidle2",
-          timeout: 30000,
+          timeout: 40000,
         })
         const loadTime = Date.now() - startTime
 
@@ -124,7 +125,7 @@ export async function analyzeUrl(url: string): Promise<ImageAnalysis> {
               srcset: img.srcset || "",
             }
           })
-        })
+        });
 
         // Get the HTML content for additional analysis
         html = await page.content()
@@ -206,11 +207,14 @@ export async function analyzeUrl(url: string): Promise<ImageAnalysis> {
           // Find the network data for this image URL
           const networkEntry = imageNetworkData.get(src)
           if (networkEntry) {
+            // new line characters breaking some of the headers, replacing with commas
+            for(let [key,value] of Object.entries(networkEntry.headers)){
+              networkEntry.headers[key] = String(value).replace(/\r?\n/g, ', ')
+            }
             cacheInfo = parseCacheStatus(new Headers(networkEntry.headers))
             responseTime = networkEntry.responseTime
             networkSize = networkEntry.size || 0
           }
-
           // Fetch image to analyze if we don't have network data or size is missing
           let buffer: ArrayBuffer | undefined
           let size = networkSize

@@ -1,7 +1,7 @@
 export async function fetchWithTimeout(url: string, options: RequestInit = {}, timeout = 10000): Promise<Response> {
     const controller = new AbortController()
     const id = setTimeout(() => controller.abort(), timeout)
-  
+
     try {
       const response = await fetch(url, {
         ...options,
@@ -52,7 +52,7 @@ export async function fetchWithTimeout(url: string, options: RequestInit = {}, t
   
     // Check for Akamai cache header
     const akamaiCache = headers.get("x-cache")
-    if (akamaiCache && !result.cacheProvider) {
+    if (akamaiCache && !result.cacheProvider && akamaiCache.includes('TCP')) {
       result.cacheHit = akamaiCache.includes("HIT")
       result.cacheProvider = "Akamai"
     }
