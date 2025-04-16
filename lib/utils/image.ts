@@ -145,7 +145,7 @@ export function getImageFormatFromUrl(url: string, contentType?: string): string
     // CRITICAL: Cache penalty - apply this first and make it significant
     // If cache info exists and the image is not cached, apply a significant penalty
     if (cacheInfo && !cacheInfo.cacheHit) {
-      score -= 25 // Significant penalty for non-cached images
+      score -= 15 // Significant penalty for non-cached images
     }
   
     // Format-based scoring
@@ -153,31 +153,31 @@ export function getImageFormatFromUrl(url: string, contentType?: string): string
       // Modern formats are good - no deduction
     } else if (format === "png") {
       // PNG is often larger than necessary for photos
-      score -= 20
+      score -= 15
     } else if (format === "jpeg" || format === "jpg") {
       // JPEG is common but not as efficient as WebP
-      score -= 15
+      score -= 10
     } else if (format === "gif") {
       // GIF is often inefficient
       score -= 30
     } else {
       // Unknown or other formats
-      score -= 10
+      score -= 5
     }
   
     // Size-based scoring
     if (size > 1000000) {
       // > 1MB
-      score -= 30
+      score -= 20
     } else if (size > 500000) {
       // > 500KB
-      score -= 20
+      score -= 10
     } else if (size > 200000) {
       // > 200KB
-      score -= 10
+      score -= 5
     } else if (size > 100000) {
       // > 100KB
-      score -= 5
+      score -= 0
     }
   
     // Dimension-based scoring
