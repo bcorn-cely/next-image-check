@@ -39,14 +39,14 @@ export async function fetchWithTimeout(url: string, options: RequestInit = {}, t
     // Check for Cloudflare's cache header
     const cfCache = headers.get("cf-cache-status")
     if (cfCache) {
-      result.cacheHit = cfCache === "HIT"
+      result.cacheHit = cfCache.toLowerCase() === "hit"
       result.cacheProvider = "Cloudflare"
     }
 
     // Check for AWS Cache
     const awsCache = headers.get('x-cache');
     if(awsCache && awsCache.includes('cloudfront')) {
-        result.cacheHit = awsCache.includes('HIT');
+        result.cacheHit = awsCache.toLowerCase().includes('hit');
         result.cacheProvider = 'Cloudfront';
     }
   
