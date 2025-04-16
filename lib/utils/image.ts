@@ -139,12 +139,18 @@ export function getImageFormatFromUrl(url: string, contentType?: string): string
     srcsetAnalysis?: ReturnType<typeof analyzeSrcSet>,
     cacheInfo?: { cacheHit: boolean; cacheProvider?: string },
   ): number {
+    // Start with a perfect score and deduct points for issues
     let score = 100
+  
+    // CRITICAL: Cache penalty - apply this first and make it significant
+    // If cache info exists and the image is not cached, apply a significant penalty
+    if (cacheInfo && !cacheInfo.cacheHit) {
+      score -= 25 // Significant penalty for non-cached images
+    }
   
     // Format-based scoring
     if (format === "webp" || format === "avif") {
-      // Modern formats are good
-      score -= 0
+      // Modern formats are good - no deduction
     } else if (format === "png") {
       // PNG is often larger than necessary for photos
       score -= 20
@@ -191,31 +197,19 @@ export function getImageFormatFromUrl(url: string, contentType?: string): string
       }
     }
   
-    // Bonus for using Next.js Image
-    if (isUsingNextImage) {
-      score += 15
+    // Responsive image scoring
+    if (!srcsetAnalysis || srcsetAnalysis.transformationCount === 0) {
+      // Penalize for no responsive images
+      score -= 15
+    } else if (srcsetAnalysis.transformationCount < 2) {
+      // Minor penalty for limited responsive options
+      score -= 5
     }
   
-    // Bonus for good srcset implementation
-    if (srcsetAnalysis) {
-      if (srcsetAnalysis.transformationCount >= 3) {
-        score += 10
-      } else if (srcsetAnalysis.transformationCount >= 1) {
-        score += 5
-      }
-  
-      if (srcsetAnalysis.hasAppropriateRange) {
-        score += 5
-      }
-  
-      if (srcsetAnalysis.hasMobileSize && srcsetAnalysis.hasDesktopSize) {
-        score += 5
-      }
-    }
-  
-    // Bonus for cached images
-    if (cacheInfo?.cacheHit) {
-      score += 10
+    // Next.js Image component scoring
+    if (!isUsingNextImage) {
+      // Penalize for not using Next.js Image
+      score -= 15
     }
   
     // Ensure score is within 0-100 range
@@ -233,6 +227,16 @@ export function getImageFormatFromUrl(url: string, contentType?: string): string
   ): string[] {
     const recommendations: string[] = []
   
+    // Cache recommendations - CRITICAL
+    if (cacheInfo && !cacheInfo.cacheHit) {
+      recommendations.unshift(
+        "Image is not being served from cache - set appropriate cache headers to improve performance",
+      )
+    } else if (cacheInfo && cacheInfo.ttl !== undefined && cacheInfo.ttl < 86400) {
+      // Less than 1 day
+      recommendations.push(`Consider increasing cache TTL (currently ${cacheInfo.ttl} seconds) to reduce origin requests`)
+    }
+  
     // Next.js Image component recommendations
     if (!isUsingNextImage) {
       if (isLikelyNextJsSite) {
@@ -240,8 +244,6 @@ export function getImageFormatFromUrl(url: string, contentType?: string): string
       } else {
         recommendations.push("Consider using Next.js for your project to leverage its Image component for optimization")
       }
-    } else {
-      recommendations.push("Already using Next.js Image component - good practice!")
     }
   
     // Format recommendations
@@ -283,32 +285,19 @@ export function getImageFormatFromUrl(url: string, contentType?: string): string
       }
     }
   
-    // Srcset recommendations
-    if (srcsetAnalysis) {
-      if (srcsetAnalysis.transformationCount === 0) {
-        recommendations.push("Add srcset attribute with multiple image sizes for responsive loading")
-      } else if (srcsetAnalysis.transformationCount < 3) {
-        recommendations.push("Consider adding more size variants to your srcset for better responsive coverage")
-      }
-  
+    // Srcset recommendations - Only recommend if truly needed
+    if (!srcsetAnalysis || srcsetAnalysis.transformationCount === 0) {
+      recommendations.push("Add srcset attribute with multiple image sizes for responsive loading")
+    } else if (srcsetAnalysis.transformationCount === 1) {
+      // Only recommend more variants if there's just one transformation
+      recommendations.push("Add more size variants to your srcset for better responsive coverage")
+    } else {
+      // For images with 2+ transformations, only make specific recommendations if needed
       if (!srcsetAnalysis.hasMobileSize) {
         recommendations.push("Add smaller image sizes to your srcset for mobile devices")
       }
-  
       if (!srcsetAnalysis.hasDesktopSize) {
         recommendations.push("Add larger image sizes to your srcset for desktop displays")
-      }
-    }
-  
-    // Cache recommendations
-    if (cacheInfo) {
-      if (!cacheInfo.cacheHit) {
-        recommendations.push("Image is not being served from cache - consider setting appropriate cache headers")
-      } else if (cacheInfo.ttl !== undefined && cacheInfo.ttl < 86400) {
-        // Less than 1 day
-        recommendations.push(
-          `Consider increasing cache TTL (currently ${cacheInfo.ttl} seconds) to reduce origin requests`,
-        )
       }
     }
   
