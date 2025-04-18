@@ -69,7 +69,7 @@ export async function fetchWithTimeout(url: string, options: RequestInit = {}, t
       result.cacheProvider = "Akamai"
     }
     // Check for Adobe AEM cache header
-    const adobeCache = headers.get('x-adobe-cachkey');
+    const adobeCache = headers.get('x-adobe-cachekey');
     if(!result.cacheProvider && adobeCache) {
         result.cacheProvider = 'Adobe AEM';
     }
