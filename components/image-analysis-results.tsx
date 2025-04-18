@@ -20,6 +20,9 @@ import {
   Eye,
   EyeOff,
   ImageIcon,
+  Database,
+  Globe,
+  Cloud,
 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -39,6 +42,21 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 
+function getProviderDistribution(images: ImageInfo[]): { provider: string; count: number }[] {
+  const providerCounts: Record<string, number> = {}
+
+  images.forEach((image) => {
+    if (image.serverInfo?.provider) {
+      const provider = image.serverInfo.provider
+      providerCounts[provider] = (providerCounts[provider] || 0) + 1
+    }
+  })
+
+  return Object.entries(providerCounts)
+    .map(([provider, count]) => ({ provider, count }))
+    .sort((a, b) => b.count - a.count)
+}
+
 export function ImageAnalysisResults({ results }: { results: ImageAnalysis }) {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedFilters, setSelectedFilters] = useState<{
@@ -46,11 +64,13 @@ export function ImageAnalysisResults({ results }: { results: ImageAnalysis }) {
     format: string[]
     size: string[]
     status: string[]
+    provider: string[]
   }>({
     score: [],
     format: [],
     size: [],
     status: [],
+    provider: [],
   })
   const [sortBy, setSortBy] = useState<{ field: string; direction: "asc" | "desc" }>({
     field: "optimizationScore",
@@ -65,6 +85,15 @@ export function ImageAnalysisResults({ results }: { results: ImageAnalysis }) {
       if (img.format) formats.add(img.format.toUpperCase())
     })
     return Array.from(formats)
+  }, [results.images])
+
+  // Extract all available providers from images
+  const availableProviders = useMemo(() => {
+    const providers = new Set<string>()
+    results.images.forEach((img) => {
+      if (img.serverInfo?.provider) providers.add(img.serverInfo.provider)
+    })
+    return Array.from(providers)
   }, [results.images])
 
   // Filter images based on search and filters
@@ -122,6 +151,13 @@ export function ImageAnalysisResults({ results }: { results: ImageAnalysis }) {
           }
         }
 
+        // Provider filter
+        if (selectedFilters.provider.length > 0) {
+          if (!image.serverInfo?.provider || !selectedFilters.provider.includes(image.serverInfo.provider)) {
+            return false
+          }
+        }
+
         return true
       })
       .sort((a, b) => {
@@ -174,6 +210,7 @@ export function ImageAnalysisResults({ results }: { results: ImageAnalysis }) {
       format: [],
       size: [],
       status: [],
+      provider: [],
     })
     setSearchQuery("")
   }
@@ -243,6 +280,29 @@ export function ImageAnalysisResults({ results }: { results: ImageAnalysis }) {
                   </div>
                 </Card>
               </div>
+
+              {/* Provider Distribution */}
+              {results.images.some((img) => img.serverInfo?.provider) && (
+                <Card className="p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Database className="h-5 w-5 text-blue-600" />
+                    <span className="font-medium">Image Providers</span>
+                  </div>
+                  <div className="space-y-2">
+                    {getProviderDistribution(results.images).map(({ provider, count }) => (
+                      <div key={provider} className="flex justify-between items-center">
+                        <span className="text-sm">{provider}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium">{count}</span>
+                          <span className="text-xs text-muted-foreground">
+                            ({Math.round((count / results.images.length) * 100)}%)
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Card className="p-4">
@@ -388,6 +448,18 @@ export function ImageAnalysisResults({ results }: { results: ImageAnalysis }) {
                 >
                   Cached Images
                 </DropdownMenuCheckboxItem>
+
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel>Filter by Provider</DropdownMenuLabel>
+                {availableProviders.map((provider) => (
+                  <DropdownMenuCheckboxItem
+                    key={provider}
+                    checked={selectedFilters.provider.includes(provider)}
+                    onCheckedChange={() => toggleFilter("provider", provider)}
+                  >
+                    {provider}
+                  </DropdownMenuCheckboxItem>
+                ))}
 
                 <DropdownMenuSeparator />
                 <div className="p-2">
@@ -628,6 +700,12 @@ function CompactImageCard({
                   Hidden
                 </Badge>
               )}
+              {image.serverInfo?.provider && (
+                <Badge variant="outline" className="flex items-center gap-1 text-xs">
+                  <Database className="h-3 w-3" />
+                  {image.serverInfo.provider}
+                </Badge>
+              )}
             </div>
           </div>
 
@@ -691,7 +769,7 @@ function CompactImageCard({
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-7 px-2 text-xs mt-2" 
+                          className="h-7 px-2 text-xs mt-2"
                           onClick={() => image.srcset && copyToClipboard(image.srcset, "srcset copied to clipboard!")}
                         >
                           <Copy className="h-3.5 w-3.5 mr-1" /> Copy
@@ -736,6 +814,45 @@ function CompactImageCard({
               </AccordionItem>
             )}
 
+            {image.serverInfo && (
+              <AccordionItem value="server" className="border-none">
+                <AccordionTrigger className="py-2 hover:no-underline">
+                  <h4 className="text-sm font-medium">Server Information</h4>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="bg-muted p-3 rounded-md text-sm">
+                    {image.serverInfo.provider && (
+                      <div className="mb-1">
+                        <span className="font-semibold">Provider:</span>{" "}
+                        <span className="flex items-center gap-1">
+                          <Cloud className="h-3.5 w-3.5" />
+                          {image.serverInfo.provider}
+                        </span>
+                      </div>
+                    )}
+                    {image.serverInfo.server && (
+                      <div className="mb-1">
+                        <span className="font-semibold">Server:</span>{" "}
+                        <span className="flex items-center gap-1">
+                          <Server className="h-3.5 w-3.5" />
+                          {image.serverInfo.server}
+                        </span>
+                      </div>
+                    )}
+                    {image.serverInfo.location && (
+                      <div className="mb-1">
+                        <span className="font-semibold">Location:</span>{" "}
+                        <span className="flex items-center gap-1">
+                          <Globe className="h-3.5 w-3.5" />
+                          {image.serverInfo.location}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            )}
+
             {!image.isUsingNextImage && (
               <AccordionItem value="implementation" className="border-none">
                 <AccordionTrigger className="py-2 hover:no-underline">
@@ -744,12 +861,12 @@ function CompactImageCard({
                 <AccordionContent>
                   <div className="bg-muted p-3 rounded-md text-sm overflow-x-auto">
                     <pre>{`<Image
-                    src="${image.src}"
-                    alt="Description"
-                    width={${image.dimensions?.width || "width"}}
-                    height={${image.dimensions?.height || "height"}}
-                    ${image.isLCP ? "priority" : ""}
-                  />`}</pre>
+  src="${image.src}"
+  alt="Description"
+  width={${image.dimensions?.width || "width"}}
+  height={${image.dimensions?.height || "height"}}
+  ${image.isLCP ? "priority" : ""}
+/>`}</pre>
                   </div>
                 </AccordionContent>
               </AccordionItem>
