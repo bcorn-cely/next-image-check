@@ -287,8 +287,8 @@ export function getImageFormatFromUrl(url: string, contentType?: string): string
   
     // Srcset recommendations - Only recommend if truly needed
     if (!srcsetAnalysis || srcsetAnalysis.transformationCount === 0) {
-      recommendations.push("Add srcset attribute with multiple image sizes for responsive loading")
-    } else if (srcsetAnalysis.transformationCount === 1) {
+    //   recommendations.push("Add srcset attribute with multiple image sizes for responsive loading")
+    } else if (srcsetAnalysis.transformationCount <= 1) {
       // Only recommend more variants if there's just one transformation
       recommendations.push("Add more size variants to your srcset for better responsive coverage")
     } else {

@@ -73,7 +73,17 @@ export async function fetchWithTimeout(url: string, options: RequestInit = {}, t
     const cacheControl = headers.get("cache-control")
     if (cacheControl) {
       result.cacheControl = cacheControl
-  
+      
+      // Check if expiration for HIT
+      const expire = headers.get('Expires');
+      if(expire) {
+        const expireDate = new Date(expire);
+        if(isNaN(expireDate.getTime())) {
+            console.error('Invalid date format');
+        }
+        const currentDate = new Date();
+        result.cacheHit = expireDate > currentDate;
+      }
       // Extract max-age if available
       const maxAgeMatch = cacheControl.match(/max-age=(\d+)/)
       if (maxAgeMatch && maxAgeMatch[1]) {
