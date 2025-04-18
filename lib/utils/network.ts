@@ -68,15 +68,20 @@ export async function fetchWithTimeout(url: string, options: RequestInit = {}, t
       result.cacheHit = akamaiCache.includes("HIT")
       result.cacheProvider = "Akamai"
     }
+    // Check for Adobe AEM cache header
+    const adobeCache = headers.get('x-adobe-cachkey');
+    if(!result.cacheProvider && adobeCache) {
+        result.cacheProvider = 'Adobe AEM';
+    }
   
     // Check standard cache-control header
     const cacheControl = headers.get("cache-control")
     if (cacheControl) {
       result.cacheControl = cacheControl
       
-      // Check if expiration for HIT
+      // Check expiration for HIT if no cacheHit result has been found yet
       const expire = headers.get('Expires');
-      if(expire) {
+      if(expire && !result.cacheHit) {
         const expireDate = new Date(expire);
         if(isNaN(expireDate.getTime())) {
             console.error('Invalid date format');
