@@ -532,8 +532,8 @@ export function ImageAnalysisResults({ results }: { results: ImageAnalysis }) {
               <CompactImageCard
                 key={index}
                 image={image}
-                isExpanded={expandedImageIds.has(image.src)}
-                onToggleExpand={() => toggleImageExpansion(image.src)}
+                isExpanded={expandedImageIds.has(image.src + index)}
+                onToggleExpand={() => toggleImageExpansion(image.src + index)}
               />
             ))
           )}
@@ -557,17 +557,17 @@ export function ImageAnalysisResults({ results }: { results: ImageAnalysis }) {
               <div className="bg-muted p-3 rounded-md text-sm">
                 <pre>{`import Image from 'next/image'
 
-export default function Page() {
-  return (
-    <Image
-      src="/path/to/image.jpg"
-      alt="Description"
-      width={500}
-      height={300}
-      priority={false}
-    />
-  )
-}`}</pre>
+                  export default function Page() {
+                    return (
+                      <Image
+                        src="/path/to/image.jpg"
+                        alt="Description"
+                        width={500}
+                        height={300}
+                        priority={false}
+                      />
+                    )
+                  }`}</pre>
               </div>
             </div>
 
@@ -594,17 +594,17 @@ export default function Page() {
               </p>
               <div className="bg-muted p-3 rounded-md text-sm">
                 <pre>{`// next.config.js
-module.exports = {
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'example.com',
-        pathname: '/images/**',
-      },
-    ],
-  },
-}`}</pre>
+                  module.exports = {
+                    images: {
+                      remotePatterns: [
+                        {
+                          protocol: 'https',
+                          hostname: 'example.com',
+                          pathname: '/images/**',
+                        },
+                      ],
+                    },
+                  }`}</pre>
               </div>
             </div>
           </CardContent>
