@@ -125,24 +125,28 @@ export function parseServerInfo(headers: Headers): {
     // Identify provider based on headers
     if (serverHeader?.includes("AmazonS3") || serverHeader?.includes("Amazon")) {
       result.provider = "Amazon S3"
+    } else if (serverHeader?.includes('Cloudinary')) {
+        result.provider = 'Cloudinary';
     } else if (serverHeader?.includes("cloudflare")) {
-      result.provider = "Cloudflare"
+        result.provider = "Cloudflare"
     } else if (serverHeader?.includes("gws") || headers.get("x-goog-storage-class")) {
-      result.provider = "Google Cloud Storage"
+        result.provider = "Google Cloud Storage"
     } else if (serverHeader?.includes("Microsoft-IIS") || headers.get("x-ms-request-id")) {
-      result.provider = "Azure Storage"
+        result.provider = "Azure Storage"
+    } else if (serverHeader?.includes('Unknown') && headers.get('X-Adobe-Cachekey')) {
+        result.provider = "Adobe AEM"; 
     } else if (headers.get("x-amz-cf-id") || headers.get("x-amz-cf-pop")) {
-      result.provider = "Amazon CloudFront"
+        result.provider = "Amazon CloudFront"
     } else if (headers.get("x-akamai-transformed")) {
-      result.provider = "Akamai"
+        result.provider = "Akamai"
     } else if (headers.get("x-fastly-request-id")) {
-      result.provider = "Fastly"
+        result.provider = "Fastly"
     } else if (headers.get("x-vercel-cache")) {
-      result.provider = "Vercel"
+        result.provider = "Vercel"
     } else if (headers.get("x-served-by")?.includes("cache")) {
-      result.provider = "Varnish Cache"
+        result.provider = "Varnish Cache"
     } else if (headers.get("x-cdn")) {
-      result.provider = headers.get("x-cdn") || undefined
+        result.provider = headers.get("x-cdn") || undefined
     }
   
     // Try to determine geographic location
