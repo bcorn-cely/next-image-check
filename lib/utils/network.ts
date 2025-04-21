@@ -125,8 +125,6 @@ export function parseServerInfo(headers: Headers): {
     // Identify provider based on headers
     if (serverHeader?.includes("AmazonS3") || serverHeader?.includes("Amazon")) {
       result.provider = "Amazon S3"
-    } else if (serverHeader?.includes('Cloudinary')) {
-        result.provider = 'Cloudinary';
     } else if (serverHeader?.includes("cloudflare")) {
         result.provider = "Cloudflare"
     } else if (serverHeader?.includes("gws") || headers.get("x-goog-storage-class")) {
