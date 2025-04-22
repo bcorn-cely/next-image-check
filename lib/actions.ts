@@ -25,7 +25,6 @@ import {
 import puppeteer from "puppeteer-core"
 import chromium from "@sparticuz/chromium-min"
 import sharp from 'sharp';
-import { clear } from "console"
 
 type ImageData = {
   src: string;
@@ -59,7 +58,7 @@ export async function analyzeUrl(url: string): Promise<ImageAnalysis> {
       if (usePuppeteer) {
         // Use Puppeteer to render the page with JavaScript
         browser = await initPuppeteer(chromium, puppeteer)
-        const page = await browser.newPage()
+        const page = await browser.newPage();
 
         // Setup page with realistic settings
         await setupPage(page)
