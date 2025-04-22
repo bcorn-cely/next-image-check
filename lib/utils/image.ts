@@ -213,7 +213,7 @@ export function getImageFormatFromUrl(url: string, contentType?: string): string
     }
   
     // Ensure score is within 0-100 range
-    return Math.max(0, Math.min(100, score))
+    return Math.max(0, Math.min(100, score));
   }
   
   export function generateRecommendations(
