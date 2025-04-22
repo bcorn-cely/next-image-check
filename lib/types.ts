@@ -33,6 +33,11 @@ export interface ImageInfo {
   srcsetAnalysis?: SrcSetAnalysis
   cacheInfo?: CacheInfo
   responseTime?: number
+  serverInfo: {
+    server: string
+    provider: string
+    location: string
+  }
 }
 
 export interface ImageAnalysis {

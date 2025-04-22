@@ -5,6 +5,7 @@ import type { ImageAnalysis, ImageInfo } from "./types"
 import {
   fetchWithTimeout,
   parseCacheStatus,
+  parseServerInfo,
 } from "@/lib/utils/network"
 import {
   getImageFormatFromUrl,
@@ -24,7 +25,6 @@ import {
 import puppeteer from "puppeteer-core"
 import chromium from "@sparticuz/chromium-min"
 import sharp from 'sharp';
-import { clear } from "console"
 
 type ImageData = {
   src: string;
@@ -58,7 +58,7 @@ export async function analyzeUrl(url: string): Promise<ImageAnalysis> {
       if (usePuppeteer) {
         // Use Puppeteer to render the page with JavaScript
         browser = await initPuppeteer(chromium, puppeteer)
-        const page = await browser.newPage()
+        const page = await browser.newPage();
 
         // Setup page with realistic settings
         await setupPage(page)
@@ -219,9 +219,10 @@ export async function analyzeUrl(url: string): Promise<ImageAnalysis> {
           let buffer: ArrayBuffer | undefined
           let size = networkSize
           let contentType: string | null = null
+          let imgResponse: Response | undefined
 
           if (!size) {
-            const imgResponse = await fetchWithTimeout(
+            imgResponse = await fetchWithTimeout(
               src,
               {
                 headers: {
@@ -239,10 +240,19 @@ export async function analyzeUrl(url: string): Promise<ImageAnalysis> {
             size = buffer.byteLength
             contentType = imgResponse.headers.get("content-type")
 
+
             // If we didn't get cache info from Puppeteer, try to get it from this fetch
             if (!cacheInfo) {
               cacheInfo = parseCacheStatus(imgResponse.headers)
             }
+          }
+
+          // Get server information
+          let serverInfo = undefined
+          if (networkEntry) {
+            serverInfo = parseServerInfo(new Headers(networkEntry.headers))
+          } else if (imgResponse) {
+            serverInfo = parseServerInfo(imgResponse.headers)
           }
 
           // If this is the largest image so far, mark as potential LCP
@@ -324,6 +334,7 @@ export async function analyzeUrl(url: string): Promise<ImageAnalysis> {
             srcsetAnalysis,
             cacheInfo,
             responseTime,
+            serverInfo
           }
         } catch (err) {
           console.error("Error processing image:", src, err)

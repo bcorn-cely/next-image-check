@@ -209,11 +209,11 @@ export function getImageFormatFromUrl(url: string, contentType?: string): string
     // Next.js Image component scoring
     if (!isUsingNextImage) {
       // Penalize for not using Next.js Image
-      score -= 15
+      score -= 10
     }
   
     // Ensure score is within 0-100 range
-    return Math.max(0, Math.min(100, score))
+    return Math.max(0, Math.min(100, score));
   }
   
   export function generateRecommendations(
@@ -287,8 +287,8 @@ export function getImageFormatFromUrl(url: string, contentType?: string): string
   
     // Srcset recommendations - Only recommend if truly needed
     if (!srcsetAnalysis || srcsetAnalysis.transformationCount === 0) {
-      recommendations.push("Add srcset attribute with multiple image sizes for responsive loading")
-    } else if (srcsetAnalysis.transformationCount === 1) {
+      recommendations.push("Add responsive variants for your images to improve performance")
+    } else if (srcsetAnalysis.transformationCount <= 1) {
       // Only recommend more variants if there's just one transformation
       recommendations.push("Add more size variants to your srcset for better responsive coverage")
     } else {
